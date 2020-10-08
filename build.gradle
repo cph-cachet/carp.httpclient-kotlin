@@ -1,11 +1,11 @@
 buildscript {
     ext {
         versions = [
-            kotlin:'1.4.0',
-            serialization:'1.0.0-RC',
-            ktor:'1.4.0',
-            nodePlugin:'2.2.3',
-            carp:'1.0.0-alpha.19',
+            kotlin:'1.4.10',
+            serialization:'1.0.0-RC2',
+            ktor:'1.4.1',
+            nodePlugin:'3.0.0-rc2',
+            carp:'1.0.0-alpha.22',
         ]
     }
 
