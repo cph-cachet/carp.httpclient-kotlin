@@ -1,17 +1,13 @@
 package dk.cachet.carp.studies.infrastructure
 
-import dk.cachet.carp.common.EmailAddress
 import dk.cachet.carp.common.UUID
 import dk.cachet.carp.common.ddd.ApplicationServiceHttpClient
 import dk.cachet.carp.deployment.domain.users.StudyInvitation
 import dk.cachet.carp.protocols.domain.StudyProtocolSnapshot
 import dk.cachet.carp.studies.application.StudyService
-import dk.cachet.carp.studies.domain.ParticipantGroupStatus
 import dk.cachet.carp.studies.domain.StudyDetails
 import dk.cachet.carp.studies.domain.users.StudyOwner
 import dk.cachet.carp.studies.domain.StudyStatus
-import dk.cachet.carp.studies.domain.users.AssignParticipantDevices
-import dk.cachet.carp.studies.domain.users.Participant
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 
@@ -19,7 +15,6 @@ import io.ktor.client.HttpClientConfig
 /**
  * Create and manage studies on a CARP HTTP studies endpoint.
  */
-@Suppress( "TooManyFunctions" ) // TODO: Perhaps split up participation management from main interface.
 class StudyServiceHttpClient(
     /**
      * [host] name of the studies endpoint, without port (domain) and protocol.
@@ -94,29 +89,12 @@ class StudyServiceHttpClient(
         postRequest( StudyServiceRequest.GetStudiesOverview( owner ) )
 
     /**
-     * Add a [Participant] to the study with the specified [studyId], identified by the specified [email] address.
-     * In case the [email] was already added before, the same [Participant] is returned.
-     *
-     * @throws IllegalArgumentException when a study with [studyId] does not exist.
-     */
-    override suspend fun addParticipant( studyId: UUID, email: EmailAddress ): Participant =
-        postRequest( StudyServiceRequest.AddParticipant( studyId, email ) )
-
-    /**
-     * Get all [Participant]s for the study with the specified [studyId].
-     *
-     * @throws IllegalArgumentException when a study with [studyId] does not exist.
-     */
-    override suspend fun getParticipants( studyId: UUID ): List<Participant> =
-        postRequest( StudyServiceRequest.GetParticipants( studyId) )
-
-    /**
      * Specify an [invitation], shared with participants once they are invited to the study with the specified [studyId].
      *
      * @throws IllegalArgumentException when a study with [studyId] does not exist.
      */
     override suspend fun setInvitation( studyId: UUID, invitation: StudyInvitation ): StudyStatus =
-        postRequest( StudyServiceRequest.SetInvitation( studyId, invitation))
+        postRequest( StudyServiceRequest.SetInvitation( studyId, invitation ) )
 
     /**
      * Specify the study [protocol] to use for the study with the specified [studyId].
@@ -139,36 +117,10 @@ class StudyServiceHttpClient(
         postRequest( StudyServiceRequest.GoLive( studyId ) )
 
     /**
-     * Deploy the study with the given [studyId] to a [group] of previously added participants.
-     * In case a group with the same participants has already been deployed and is still running (not stopped),
-     * the latest status for this group is simply returned.
+     * Remove the study with the specified [studyId].
      *
-     * @throws IllegalArgumentException when:
-     *  - a study with [studyId] does not exist
-     *  - [group] is empty
-     *  - any of the participants specified in [group] does not exist
-     *  - any of the device roles specified in [group] are not part of the configured study protocol
-     *  - not all devices part of the study have been assigned a participant
-     * @throws IllegalStateException when the study is not yet ready for deployment.
+     * @return True when the study has been deleted, or false when there is no study to delete.
      */
-    override suspend fun deployParticipantGroup( studyId: UUID, group: Set<AssignParticipantDevices> ): ParticipantGroupStatus =
-        postRequest( StudyServiceRequest.DeployParticipantGroup( studyId, group ) )
-
-    /**
-     * Get the status of all deployed participant groups in the study with the specified [studyId].
-     *
-     * @throws IllegalArgumentException when a study with [studyId] does not exist.
-     */
-    override suspend fun getParticipantGroupStatusList( studyId: UUID ): List<ParticipantGroupStatus> =
-        postRequest( StudyServiceRequest.GetParticipantGroupStatusList( studyId ))
-
-    /**
-     * Stop the study deployment in the study with the given [studyId]
-     * of the participant group with the specified [groupId] (equivalent to the studyDeploymentId).
-     * No further changes to this deployment will be allowed and no more data will be collected.
-     *
-     * @throws IllegalArgumentException when a study with [studyId] or participant group with [groupId] does not exist.
-     */
-    override suspend fun stopParticipantGroup( studyId: UUID, groupId: UUID ): ParticipantGroupStatus =
-        postRequest( StudyServiceRequest.StopParticipantGroup( studyId, groupId ))
+    override suspend fun remove( studyId: UUID ): Boolean =
+        postRequest( StudyServiceRequest.Remove( studyId ) )
 }
